@@ -12,6 +12,7 @@ import websockets
 import websockets.exceptions
 
 from ..base.websocket import OrderBookWebSocket
+from ..models.orderbook import OrderbookManager
 
 logger = logging.getLogger(__name__)
 
@@ -40,54 +41,6 @@ class Trade:
     taker: str = ""
     maker: str = ""
     transaction_hash: str = ""
-
-
-class OrderbookManager:
-    """
-    Helper class to manage multiple orderbooks efficiently.
-    Stores orderbooks for multiple tokens and provides easy access.
-    """
-
-    def __init__(self):
-        self.orderbooks: Dict[str, Dict[str, Any]] = {}
-
-    def update(self, token_id: str, orderbook: Dict[str, Any]):
-        """Update orderbook for a token"""
-        self.orderbooks[token_id] = orderbook
-
-    def get(self, token_id: str) -> Optional[Dict[str, Any]]:
-        """Get orderbook for a token"""
-        return self.orderbooks.get(token_id)
-
-    def get_best_bid_ask(self, token_id: str) -> tuple[Optional[float], Optional[float]]:
-        """
-        Get best bid and ask for a token.
-
-        Returns:
-            (best_bid, best_ask) or (None, None) if no data
-        """
-        orderbook = self.get(token_id)
-        if not orderbook:
-            return None, None
-
-        bids = orderbook.get("bids", [])
-        asks = orderbook.get("asks", [])
-
-        best_bid = bids[0][0] if bids else None
-        best_ask = asks[0][0] if asks else None
-
-        return best_bid, best_ask
-
-    def has_data(self, token_id: str) -> bool:
-        """Check if we have orderbook data for a token"""
-        orderbook = self.get(token_id)
-        if not orderbook:
-            return False
-        return len(orderbook.get("bids", [])) > 0 and len(orderbook.get("asks", [])) > 0
-
-    def has_all_data(self, token_ids: list[str]) -> bool:
-        """Check if we have orderbook data for all tokens"""
-        return all(self.has_data(tid) for tid in token_ids)
 
 
 class PolymarketWebSocket(OrderBookWebSocket):
